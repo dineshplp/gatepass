@@ -51,15 +51,15 @@
       window.onload = () => {
         const now = new Date();
 
-        // Adjust to IST (UTC+5:30)
-        const istOffset = 5.5 * 60 * 60 * 1000;
-        const istTime = new Date(now.getTime() + istOffset - now.getTimezoneOffset() * 60000);
+        // Convert to IST (UTC+5:30)
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+        const istTime = new Date(utc + (5.5 * 60 * 60 * 1000));
 
-        // Format date to yyyy-mm-dd
+        // Set current date in yyyy-mm-dd format
         const today = istTime.toISOString().split('T')[0];
         document.getElementById("date").value = today;
 
-        // Format time to HH:MM
+        // Set outTime to current IST time in HH:MM format
         const hours = pad(istTime.getHours());
         const minutes = pad(istTime.getMinutes());
         document.getElementById("outTime").value = `${hours}:${minutes}`;
