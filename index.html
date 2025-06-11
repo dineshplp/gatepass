@@ -1,102 +1,253 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <base target="_top">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gate Pass Entry System</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .form-container { margin-bottom: 20px; }
+        .form-container label { display: inline-block; width: 150px; }
+        .form-container input, .form-container select { margin-bottom: 10px; padding: 5px; }
+        button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        .tab { margin-bottom: 20px; }
+        .tab button { padding: 10px; margin-right: 5px; }
+        .tab button.active { background-color: #4CAF50; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Gate Pass Entry System</h1>
+
+    <div class="tab">
+        <button onclick="showTab('entry')" class="active">Gate Pass Entry</button>
+        <button onclick="showTab('master')">Employee Master</button>
+        <button onclick="showTab('records')">Gate Pass Records</button>
+    </div>
+
+    <!-- Gate Pass Entry Form -->
+    <div id="entry" class="tab-content">
+        <h2>Gate Pass Entry</h2>
+        <div class="form-container">
+            <label for="empCode">Emp Code:</label>
+            <input type="text" id="empCode" oninput="fetchEmployeeDetails()">
+            <br>
+            <label for="empName">Employee Name:</label>
+            <input type="text" id="empName" readonly>
+            <br>
+            <label for="department">Department:</label>
+            <input type="text" id="department" readonly>
+            <br>
+            <label for="date">Date:</label>
+            <input type="date" id="date" required>
+            <br>
+            <label for="shift">Shift:</label>
+            <select id="shift" required>
+                <option value="General">General</option>
+                <option value="Morning">Morning</option>
+                <option value="Night">Night</option>
+            </select>
+            <br>
+            <label for="outTime">Out Time:</label>
+            <input type="time" id="outTime" required>
+            <br>
+            <label for="inTime">In Time:</label>
+            <input type="time" id="inTime">
+            <br>
+            <label for="place">Place:</label>
+            <input type="text" id="place" required>
+            <br>
+            <label for="purpose">Purpose:</label>
+            <input type="text" id="purpose" required>
+            <br>
+            <label for="leaveType">Half Day/Short Leave:</label>
+            <select id="leaveType" required>
+                <option value="None">None</option>
+                <option value="Half Day">Half Day</option>
+                <option value="Short Leave">Short Leave</option>
+            </select>
+            <br>
+            <button onclick="submitGatePass()">Submit</button>
+        </div>
+    </div>
+
+    <!-- Employee Master Form -->
+    <div id="master" class="tab-content" style="display: none;">
+        <h2>Employee Master</h2>
+        <div class="form-container">
+            <label for="masterEmpCode">Emp Code:</label>
+            <input type="text" id="masterEmpCode" required>
+            <br>
+            <label for="masterEmpName">Employee Name:</label>
+            <input type="text" id="masterEmpName" required>
+            <br>
+            <label for="masterDepartment">Department:</label>
+            <input type="text" id="masterDepartment" required>
+            <br>
+            <button onclick="addEmployee()">Add Employee</button>
+        </div>
+        <h3>Employee List</h3>
+        <table id="employeeTable">
+            <thead>
+                <tr>
+                    <th>Emp Code</th>
+                    <th>Employee Name</th>
+                    <th>Department</th>
+                </tr>
+            </thead>
+            <tbody id="employeeTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Gate Pass Records -->
+    <div id="records" class="tab-content" style="display: none;">
+        <h2>Gate Pass Records</h2>
+        <table id="gatePassTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Emp Code</th>
+                    <th>Employee Name</th>
+                    <th>Department</th>
+                    <th>Shift</th>
+                    <th>Out Time</th>
+                    <th>In Time</th>
+                    <th>Place</th>
+                    <th>Purpose</th>
+                    <th>Half Day / Short Leave</th>
+                </tr>
+            </thead>
+            <tbody id="gatePassTableBody"></tbody>
+        </table>
+    </div>
+
     <script>
-      function fetchEmployeeDetails() {
-        const shortCode = document.getElementById("shortCode").value.trim();
-        if (!shortCode) return;
+        // Initialize local storage
+        let employees = JSON.parse(localStorage.getItem('employees')) || [];
+        let gatePasses = JSON.parse(localStorage.getItem('gatePasses')) || [];
 
-        fetch("https://script.google.com/macros/s/AKfycbwLgH7yuefSHkLFLX54Mzh_OI3CkbGcZVvHPE1mMROKjmEOQ_hnHD3aBtRUP2ETmQG17A/exec?shortCode=" + shortCode)
-          .then(response => response.json())
-          .then(data => {
-            document.getElementById("empCode").value = data.empCode;
-            document.getElementById("empName").value = data.name;
-            document.getElementById("department").value = data.dept;
-          })
-          .catch(err => alert("Error fetching employee data: " + err));
-      }
+        // Show tab content
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+            document.getElementById(tabId).style.display = 'block';
+            document.querySelectorAll('.tab button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.tab button[onclick="showTab('${tabId}')"]`).classList.add('active');
+            if (tabId === 'master') loadEmployeeTable();
+            if (tabId === 'records') loadGatePassTable();
+        }
 
-      function submitForm() {
-        const formData = {
-          date: document.getElementById("date").value,
-          empCode: document.getElementById("empCode").value,
-          empName: document.getElementById("empName").value,
-          department: document.getElementById("department").value,
-          shift: document.getElementById("shift").value,
-          outTime: document.getElementById("outTime").value,
-          inTime: document.getElementById("inTime").value,
-          place: document.getElementById("place").value,
-          purpose: document.getElementById("purpose").value,
-          leaveType: document.getElementById("leaveType").value
+        // Fetch employee details based on Emp Code
+        function fetchEmployeeDetails() {
+            const empCode = document.getElementById('empCode').value.trim();
+            const employee = employees.find(emp => emp.empCode === empCode);
+            if (employee) {
+                document.getElementById('empName').value = employee.empName;
+                document.getElementById('department').value = employee.department;
+            } else {
+                document.getElementById('empName').value = '';
+                document.getElementById('department').value = '';
+            }
+        }
+
+        // Add employee to master
+        function addEmployee() {
+            const empCode = document.getElementById('masterEmpCode').value.trim();
+            const empName = document.getElementById('masterEmpName').value.trim();
+            const department = document.getElementById('masterDepartment').value.trim();
+
+            if (empCode && empName && department) {
+                employees.push({ empCode, empName, department });
+                localStorage.setItem('employees', JSON.stringify(employees));
+                loadEmployeeTable();
+                document.getElementById('masterEmpCode').value = '';
+                document.getElementById('masterEmpName').value = '';
+                document.getElementById('masterDepartment').value = '';
+                alert('Employee added successfully!');
+            } else {
+                alert('Please fill all fields.');
+            }
+        }
+
+        // Load employee table
+        function loadEmployeeTable() {
+            const tbody = document.getElementById('employeeTableBody');
+            tbody.innerHTML = '';
+            employees.forEach(emp => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${emp.empCode}</td>
+                    <td>${emp.empName}</td>
+                    <td>${emp.department}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Submit gate pass
+        function submitGatePass() {
+            const empCode = document.getElementById('empCode').value.trim();
+            const employee = employees.find(emp => emp.empCode === empCode);
+            if (!employee) {
+                alert('Invalid Employee Code. Please add employee in Master first.');
+                return;
+            }
+
+            const gatePass = {
+                date: document.getElementById('date').value,
+                empCode: empCode,
+                empName: employee.empName,
+                department: employee.department,
+                shift: document.getElementById('shift').value,
+                outTime: document.getElementById('outTime').value,
+                inTime: document.getElementById('inTime').value,
+                place: document.getElementById('place').value.trim(),
+                purpose: document.getElementById('purpose').value.trim(),
+                leaveType: document.getElementById('leaveType').value
+            };
+
+            if (gatePass.date && gatePass.outTime && gatePass.place && gatePass.purpose) {
+                gatePasses.push(gatePass);
+                localStorage.setItem('gatePasses', JSON.stringify(gatePasses));
+                loadGatePassTable();
+                document.getElementById('entry').querySelector('form').reset();
+                document.getElementById('empName').value = '';
+                document.getElementById('department').value = '';
+                alert('Gate Pass submitted successfully!');
+            } else {
+                alert('Please fill all required fields.');
+            }
+        }
+
+        // Load gate pass table
+        function loadGatePassTable() {
+            const tbody = document.getElementById('gatePassTableBody');
+            tbody.innerHTML = '';
+            gatePasses.forEach(pass => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${pass.date}</td>
+                    <td>${pass.empCode}</td>
+                    <td>${pass.empName}</td>
+                    <td>${pass.department}</td>
+                    <td>${pass.shift}</td>
+                    <td>${pass.outTime}</td>
+                    <td>${pass.inTime || ''}</td>
+                    <td>${pass.place}</td>
+                    <td>${pass.purpose}</td>
+                    <td>${pass.leaveType}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Initialize tables on page load
+        window.onload = () => {
+            loadEmployeeTable();
+            loadGatePassTable();
         };
-
-        fetch("https://script.google.com/macros/s/AKfycbwLgH7yuefSHkLFLX54Mzh_OI3CkbGcZVvHPE1mMROKjmEOQ_hnHD3aBtRUP2ETmQG17A/exec", {
-          method: "POST",
-          mode: "cors",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(formData)
-        })
-          .then(response => response.text())
-          .then(result => alert(result))
-          .catch(error => alert("Error submitting form: " + error));
-      }
-
-      function pad(n) {
-        return n < 10 ? '0' + n : n;
-      }
-
-      window.onload = () => {
-        const now = new Date();
-
-        // Adjust to IST (UTC+5:30)
-        const istOffset = 5.5 * 60 * 60 * 1000;
-        const istTime = new Date(now.getTime() + istOffset - now.getTimezoneOffset() * 60000);
-
-        // Format date to yyyy-mm-dd
-        const today = istTime.toISOString().split('T')[0];
-        document.getElementById("date").value = today;
-
-        // Format time to HH:MM
-        const hours = pad(istTime.getHours());
-        const minutes = pad(istTime.getMinutes());
-        document.getElementById("outTime").value = `${hours}:${minutes}`;
-      }
     </script>
-  </head>
-  <body>
-    <h2>Gate Pass Entry</h2>
-    <label>Short Code: <input type="text" id="shortCode" onblur="fetchEmployeeDetails()"></label><br>
-    <label>Date: <input type="date" id="date"></label><br>
-    <label>Emp Code: <input type="text" id="empCode" readonly></label><br>
-    <label>Employee Name: <input type="text" id="empName" readonly></label><br>
-    <label>Department: <input type="text" id="department" readonly></label><br>
-    <label>Shift:
-      <select id="shift">
-        <option value="General">General</option>
-        <option value="A">A</option>
-        <option value="B">B</option>
-        <option value="C">C</option>
-      </select>
-    </label><br>
-    <label>Out Time: <input type="time" id="outTime"></label><br>
-    <label>In Time: <input type="time" id="inTime"></label><br>
-    <label>Place: <input type="text" id="place"></label><br>
-    <label>Purpose:
-      <select id="purpose">
-        <option value="Personal">Personal</option>
-        <option value="Official">Official</option>
-      </select>
-    </label><br>
-    <label>Half Day / Short Leave:
-      <select id="leaveType">
-        <option value="Short Leave">Short Leave</option>
-        <option value="Half Day">Half Day</option>
-        <option value="Full Day Absent">Full Day Absent</option>
-      </select>
-    </label><br><br>
-    <button onclick="submitForm()">Submit</button>
-  </body>
+</body>
 </html>
