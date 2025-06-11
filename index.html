@@ -33,8 +33,11 @@
 
         fetch("https://script.google.com/macros/s/AKfycbwLgH7yuefSHkLFLX54Mzh_OI3CkbGcZVvHPE1mMROKjmEOQ_hnHD3aBtRUP2ETmQG17A/exec", {
           method: "POST",
-          body: JSON.stringify(formData),
-          headers: { "Content-Type": "application/json" }
+          mode: "cors",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(formData)
         })
           .then(response => response.text())
           .then(result => alert(result))
