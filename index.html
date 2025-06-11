@@ -7,7 +7,7 @@
         const shortCode = document.getElementById("shortCode").value.trim();
         if (!shortCode) return;
 
-        fetch("https://script.google.com/macros/s/AKfycbwLgH7yuefSHkLFLX54Mzh_OI3CkbGcZVvHPE1mMROKjmEOQ_hnHD3aBtRUP2ETmQG17A/exec?shortCode=" + shortCode)
+        fetch("https://script.google.com/macros/s/AKfycbyTnsJFWblc_jdsOmIaM2UXznOGGCDlpntBI85NBvxdP-TDvYO_wg0Pn_k6qxi6MhgEng/exec?shortCode=" + shortCode)
           .then(response => response.json())
           .then(data => {
             document.getElementById("empCode").value = data.empCode;
@@ -31,7 +31,7 @@
           leaveType: document.getElementById("leaveType").value
         };
 
-        fetch("https://script.google.com/macros/s/AKfycbwLgH7yuefSHkLFLX54Mzh_OI3CkbGcZVvHPE1mMROKjmEOQ_hnHD3aBtRUP2ETmQG17A/exec", {
+        fetch("https://script.google.com/macros/s/AKfycbyTnsJFWblc_jdsOmIaM2UXznOGGCDlpntBI85NBvxdP-TDvYO_wg0Pn_k6qxi6MhgEng/exec", {
           method: "POST",
           mode: "cors",
           headers: {
