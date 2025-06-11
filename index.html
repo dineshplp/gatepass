@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <script>
+      function fetchEmployeeDetails() {
+        const shortCode = document.getElementById("shortCode").value.trim();
+        if (!shortCode) return;
+
+        fetch("https://script.google.com/macros/s/AKfycbwLgH7yuefSHkLFLX54Mzh_OI3CkbGcZVvHPE1mMROKjmEOQ_hnHD3aBtRUP2ETmQG17A/exec?shortCode=" + shortCode)
+          .then(response => response.json())
+          .then(data => {
+            document.getElementById("empCode").value = data.empCode;
+            document.getElementById("empName").value = data.name;
+            document.getElementById("department").value = data.dept;
+          })
+          .catch(err => alert("Error fetching employee data: " + err));
+      }
+
+      function submitForm() {
+        const formData = {
+          date: document.getElementById("date").value,
+          empCode: document.getElementById("empCode").value,
+          empName: document.getElementById("empName").value,
+          department: document.getElementById("department").value,
+          shift: document.getElementById("shift").value,
+          outTime: document.getElementById("outTime").value,
+          inTime: document.getElementById("inTime").value,
+          place: document.getElementById("place").value,
+          purpose: document.getElementById("purpose").value,
+          leaveType: document.getElementById("leaveType").value
+        };
+
+        fetch("https://script.google.com/macros/s/AKfycbwLgH7yuefSHkLFLX54Mzh_OI3CkbGcZVvHPE1mMROKjmEOQ_hnHD3aBtRUP2ETmQG17A/exec", {
+          method: "POST",
+          body: JSON.stringify(formData),
+          headers: { "Content-Type": "application/json" }
+        })
+          .then(response => response.text())
+          .then(result => alert(result))
+          .catch(error => alert("Error submitting form: " + error));
+      }
+
+      function pad(n) {
+        return n < 10 ? '0' + n : n;
+      }
+
+      window.onload = () => {
+        const now = new Date();
+
+        // Adjust to IST (UTC+5:30)
+        const istOffset = 5.5 * 60 * 60 * 1000;
+        const istTime = new Date(now.getTime() + istOffset - now.getTimezoneOffset() * 60000);
+
+        // Format date to yyyy-mm-dd
+        const today = istTime.toISOString().split('T')[0];
+        document.getElementById("date").value = today;
+
+        // Format time to HH:MM
+        const hours = pad(istTime.getHours());
+        const minutes = pad(istTime.getMinutes());
+        document.getElementById("outTime").value = `${hours}:${minutes}`;
+      }
+    </script>
+  </head>
+  <body>
+    <h2>Gate Pass Entry</h2>
+    <label>Short Code: <input type="text" id="shortCode" onblur="fetchEmployeeDetails()"></label><br>
+    <label>Date: <input type="date" id="date"></label><br>
+    <label>Emp Code: <input type="text" id="empCode" readonly></label><br>
+    <label>Employee Name: <input type="text" id="empName" readonly></label><br>
+    <label>Department: <input type="text" id="department" readonly></label><br>
+    <label>Shift:
+      <select id="shift">
+        <option value="General">General</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+      </select>
+    </label><br>
+    <label>Out Time: <input type="time" id="outTime"></label><br>
+    <label>In Time: <input type="time" id="inTime"></label><br>
+    <label>Place: <input type="text" id="place"></label><br>
+    <label>Purpose:
+      <select id="purpose">
+        <option value="Personal">Personal</option>
+        <option value="Official">Official</option>
+      </select>
+    </label><br>
+    <label>Half Day / Short Leave:
+      <select id="leaveType">
+        <option value="Short Leave">Short Leave</option>
+        <option value="Half Day">Half Day</option>
+        <option value="Full Day Absent">Full Day Absent</option>
+      </select>
+    </label><br><br>
+    <button onclick="submitForm()">Submit</button>
+  </body>
+</html>
